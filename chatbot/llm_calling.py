@@ -119,6 +119,41 @@ def collections_to_search(query):
 
     except Exception as err:
         print(f"Error in collection_to_search() :::: {err}")
-        return [[]]
+        return []
 
-    
+
+def parallel_query_retreival(mulltiple_queries):
+    try:
+        vector_result = set()
+        for query in mulltiple_queries:
+            db_result = collections_to_search(query)
+            for result in db_result:
+                for chunks in result:
+                    vector_result.add(chunks.page_content)
+        
+
+        seperator = '\n---\n'
+        final_vector_result = seperator.join(vector_result)
+        return final_vector_result
+            
+
+    except Exception as err:
+        print(f"Error in parallel_query_retreival() :::: {err}")
+        return "Error"
+
+
+def reciprocate_rank_fusion(multiple_queries,k=60):
+    try:
+        scores = {}
+        data_chunks = {}
+        for query in multiple_queries:
+            db_result = collections_to_search(qury)
+            for result in db_result:
+                for rank,chunks in enumerate(result):
+                    doc_id = chunks.metadata['_id']
+                    scores[doc_id] = scores.get(doc_id,0) + 1/(k+rank+1)
+
+        
+    except Excepiton as err:
+        print(f"Error in reciprocate_rank_fusion() :::: {err}")
+        return "Error"
