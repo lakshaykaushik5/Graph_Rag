@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
-from prompts import choose_rag_or_not_system_prompt, multiple_query_system_prompt, hyde_system_prompt
+from prompts import choose_rag_or_not_system_prompt, multiple_query_system_prompt, hyde_system_prompt, collection_routing_prompt
 from tools import tavily_search
+from vector_db import get_data
 import json
 
 
@@ -94,5 +95,30 @@ def hyde(query):
         print(f"Error in the hyde() :::: {err}")
         return "Error"
 
+
+def collections_to_search(query):
+    try:
+        messages = [
+            {'role':'system','content':collection_routing_prompt},
+            {'role':'user','content':query}
+        ]
+        client = llm_client('gemini')
+        response = client.chat.completions.create(
+            model="",
+            response_format={'type':'json_object'},
+            messages=messages
+        )
+
+        parsed_output = json.loads(response.choices[0].messages.content)
+        vector_result = []
+        for collection in parsed_output:
+            collection_result = get_data(collection_name=query)
+            vector_result.append(collection_result)
+        
+        return vector_result
+
+    except Exception as err:
+        print(f"Error in collection_to_search() :::: {err}")
+        return [[]]
 
     

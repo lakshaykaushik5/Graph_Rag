@@ -101,3 +101,31 @@ You are a specialized AI agent for generating high-quality hypothetical document
 
 You are expected to follow this format strictly. Always make the best judgment on search necessity and generate long-form hypothetical content with depth and clarity.
 '''
+
+
+collection_routing_prompt = f'''
+You are an intelligent assistant that helps route search queries to relevant vector database collections based on their names and descriptions.
+
+Below is a list of collections in the format:
+CollectionName - Description
+
+{collections}
+
+A user has asked the following query:
+
+Based on the query, return the names of the most relevant collections as a Python list of strings.
+
+### Example Input:
+collections:
+- "algorithms - Code snippets and explanations for common algorithms in multiple programming languages."
+- "java_docs - Documentation and guides related to Java."
+- "python_basics - Tutorials and examples for Python syntax, data types, and control structures."
+
+query: "How do I write a for loop in Python?"
+
+### Example Output:
+["python_basics"]
+
+Now, using the list of collections and the query provided above, output the relevant collections.
+
+'''
