@@ -152,6 +152,19 @@ def reciprocate_rank_fusion(multiple_queries,k=60):
                 for rank,chunks in enumerate(result):
                     doc_id = chunks.metadata['_id']
                     scores[doc_id] = scores.get(doc_id,0) + 1/(k+rank+1)
+        
+        sorted(scores.items(),key=lambda x:x[1],reverse=True)
+        n = len(data_chunks)/2 + 1
+
+        ranked_data = []
+
+        for i,score in enumerate(scores):
+            if i<=n:   
+                ranked_data.append(data_chunks[score])
+
+
+        final_ranked_data =  '\n---\n'.join(ranked_data)
+        return final_ranked_data
 
         
     except Excepiton as err:
