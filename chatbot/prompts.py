@@ -1,4 +1,4 @@
-
+from config import RAG_DESCRIPTION
 
 choose_rag_or_not_system_prompt = f'''You are an intelligent assistant that decides whether to respond using Retrieval-Augmented Generation (RAG) or a normal LLM response.
 
@@ -22,7 +22,7 @@ Examples:
 Now evaluate the actual query below.
 
 Query: "{{user_query}}"
-RAG Document Description: "{rag_doc_description}"
+RAG Document Description: "{RAG_DESCRIPTION}"
 
 '''
 
@@ -109,8 +109,7 @@ You are an intelligent assistant that helps route search queries to relevant vec
 Below is a list of collections in the format:
 CollectionName - Description
 
-{collections}
-
+{{collections}}
 A user has asked the following query:
 
 Based on the query, return the names of the most relevant collections as a Python list of strings.

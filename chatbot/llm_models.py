@@ -8,11 +8,11 @@ load_dotenv()
 
 def llm_client(model_provider):
     try:
-        base_url = NONE
-        api_key = NONE
+        base_url = ""
+        api_key = ""
         if model_provider == "gemini":
-            base_url = os.getenv('')
-            api_key = os.getenv('')
+            base_url = os.getenv('GEMINI_BASE_URL')
+            api_key = os.getenv('GEMINI_KEY')
         elif model_provider == "groq":
             base_url = os.getenv('')
             api_key = os.getenv('')

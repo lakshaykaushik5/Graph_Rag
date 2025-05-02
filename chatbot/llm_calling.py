@@ -3,13 +3,15 @@ from dotenv import load_dotenv
 from prompts import choose_rag_or_not_system_prompt, multiple_query_system_prompt, hyde_system_prompt, collection_routing_prompt
 from tools import tavily_search
 from vector_db import get_data
+from config import CHAT_MODEL
+from llm_models import llm_client
 import json
 
 
 load_dotenv()
 
 
-def llm_or_rag(query):
+def llm_or_rag(query): # DONE TESTING
     try:
         client = llm_client("gemini")
         messages = [
@@ -17,12 +19,12 @@ def llm_or_rag(query):
             {"role": "user", "content": query}
         ]
         response = client.chat.completions.create(
-            model = "",
+            model = CHAT_MODEL,
             response_format = {'type':'json_object'},
             messages = messages
         )
 
-        parsed_output = json.loads(response.choices[0].messages.content)
+        parsed_output = json.loads(response.choices[0].message.content)
 
         return parsed_output
 
@@ -36,14 +38,14 @@ def multiple_query_generator(query):
         client = llm_client("gemini")
         messages = [
             {'role':'system','content':multiple_query_system_prompt},
-            {'role':'user','content':'query'}
+            {'role':'user','content':query}
         ]
-        response = client.chat.completeions.create(
-            model='',
+        response = client.chat.completions.create(
+            model=CHAT_MODEL,
             response_format={'type':'json_object'},
             messages=messages
         )
-        parsed_output = json.loads(response.choices[0].messages.content)
+        parsed_output = json.loads(response.choices[0].message.content)
         return parsed_output
     except Exception as err:
         print(f"Error in multiple_query_generator() :::: {err}")
@@ -58,38 +60,75 @@ def hyde(query):
             {'role':'user','content':query}
         ]
         tools = [{
-            'type':'function',
-            'name':'tavily_search',
-            'description':'Search the query on Internet and return results',
-            'parameters':{
-                'type':'object',
-                'properties':{
-                    'query':{'type':'string'}
+        "type": "function",
+        "function": {
+            "name": "tavily_search",
+            "description": "Search the query on Internet and return results",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string" }
                 },
-                'required':'query'
-            },
-            'strict':True
+                "required": ["query"]
+            }
+        }
         }]
 
-        search_result = tavily_search(query)
+        # search_result = tavily_search(query)
 
-        messages.append({'role':'system','content':search_result})
+        # messages.append({'role':'system','content':search_result})
 
-        while True:
-            response = client.chat.completeions.create(
-                model = '',
-                response_format= {'type':'json_object'},
-                messages = messages,
-                tools = tools
-            )
+        # while True:
+        response = client.chat.completions.create(
+            model = CHAT_MODEL,
+            # response_format= {'type':'json_object'},
+            messages = messages,
+            tools = tools,
+            tool_choice="auto"
+        )
         
 
 
+        # print(response.output[0])
 
+        tool_call = response.choices[0].message.tool_calls[0] if response.choices[0].message.tool_calls else None
 
-        parsed_output = json.laods(response.choices[0].messages.content)
-        
-        return parsed_output 
+        # print(response)
+
+        print(tool_call)
+        if tool_call:
+            print
+            fn_name = tool_call.function.name
+            fn_args = tool_call.function.arguments
+            # query_result = fn_args.get('query')
+            print(fn_name,'\n\n\n',fn_args,'\n\n\n')
+            if isinstance(fn_args, str):
+                fn_args = json.loads(fn_args)  # Parse the JSON string into a dictionary
+
+            query_result = fn_args.get('query')
+            if fn_name == "tavily_search":
+                search_result = tavily_search(query_result)
+                print(type(search_result))
+                print('_'*100)
+                # messages.append(response.choices[0].message)
+                messages.append({'role':'tool','tool_call_id':tool_call.id,'content':str(search_result)})
+
+                final_response = client.chat.completions.create(
+                    model=CHAT_MODEL,
+                    response_format={'type':'json_object'},
+                    messages=messages
+                )
+                
+                print("here")
+
+                parsed_output = json.loads(final_response.choices[0].message.content)
+                print(parsed_output,"in if")
+                return  parsed_output
+        else:
+            parsed_output = json.loads(response.choices[0].message.content)
+            print(parsed_output,"in else")
+            return parsed_output    
+
 
     except Exception as err:
         print(f"Error in the hyde() :::: {err}")
