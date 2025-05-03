@@ -74,11 +74,6 @@ def hyde(query):
         }
         }]
 
-        # search_result = tavily_search(query)
-
-        # messages.append({'role':'system','content':search_result})
-
-        # while True:
         response = client.chat.completions.create(
             model = CHAT_MODEL,
             # response_format= {'type':'json_object'},
@@ -89,29 +84,24 @@ def hyde(query):
         
 
 
-        # print(response.output[0])
-
         tool_call = response.choices[0].message.tool_calls[0] if response.choices[0].message.tool_calls else None
 
-        # print(response)
 
         print(tool_call)
         if tool_call:
             print
             fn_name = tool_call.function.name
             fn_args = tool_call.function.arguments
-            # query_result = fn_args.get('query')
             print(fn_name,'\n\n\n',fn_args,'\n\n\n')
             if isinstance(fn_args, str):
-                fn_args = json.loads(fn_args)  # Parse the JSON string into a dictionary
+                fn_args = json.loads(fn_args)  
 
             query_result = fn_args.get('query')
             if fn_name == "tavily_search":
                 search_result = tavily_search(query_result)
-                print(type(search_result))
-                print('_'*100)
-                # messages.append(response.choices[0].message)
-                messages.append({'role':'tool','tool_call_id':tool_call.id,'content':str(search_result)})
+                # print(type(search_result))
+                # print('_'*100)
+                messages.append({'role':'user','content':search_result})
 
                 final_response = client.chat.completions.create(
                     model=CHAT_MODEL,
@@ -119,14 +109,11 @@ def hyde(query):
                     messages=messages
                 )
                 
-                print("here")
 
                 parsed_output = json.loads(final_response.choices[0].message.content)
-                print(parsed_output,"in if")
-                return  parsed_output
+                return  parsed_output.get('hypothetical_document')
         else:
             parsed_output = json.loads(response.choices[0].message.content)
-            print(parsed_output,"in else")
             return parsed_output    
 
 
@@ -206,6 +193,6 @@ def reciprocate_rank_fusion(multiple_queries,k=60):
         return final_ranked_data
 
         
-    except Excepiton as err:
+    except Exception as err:
         print(f"Error in reciprocate_rank_fusion() :::: {err}")
         return "Error"

@@ -8,15 +8,14 @@ load_dotenv()
 def tavily_search(query):
     try:
         tavily_client = TavilyClient(api_key=os.getenv('TAVILY_API_KEY'))
+        print(type(query))
         response = tavily_client.search(query,max_result = 5)
-        print('_'*100)
-        print("In tavily search")
-        print(response)
-        print('_'*100)
-        print(response.get('results'))
-        print(response.results)
+        final_response = '\n---\n'.join(
+            result.get('content', '') for result in response.get('results', [])
+        )
 
-        final_response = '\n---\n'.join(response.get('results'))
+        return final_response or "No content found."
+
 
 
         return final_response

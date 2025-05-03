@@ -73,6 +73,7 @@ You are a specialized AI agent for generating high-quality hypothetical document
 **Expected Behavior**:
 - Call `tavily_search` because the question is region-specific and involves financial inclusion strategy.
 - Then generate a HyDE document like this:
+   -'hypothectical_document':llm response
 
 ---
 
